@@ -1,4 +1,5 @@
 # Paper-to-Podcast 🎤
+![1000004188](https://github.com/user-attachments/assets/012ddd4b-ab7c-4617-9919-3a8686f27063)
 
 **Paper-to-Podcast** is a tool that transforms academic research papers into an engaging and conversational podcast format. With this project, listeners can absorb the content of a research paper in a lively discussion involving three distinct personas—perfect for those who prefer listening over reading, especially during commutes or travel.
 
