@@ -42,7 +42,7 @@ The app is cost-effective, utilizing OpenAI's API. For example, generating a 9-m
 1. Place a research paper in PDF format in the project directory.
 2. Run the script from the terminal, providing the path to your PDF file as an argument:
    ```bash
-   python main.py path/to/your/research_paper.pdf
+   python paper_to_podcast.py path/to/your/research_paper.pdf
    ```
 
 ### Sample Podcasts
