@@ -17,7 +17,7 @@ This structure fosters an interactive listening experience, helping users better
 
 ### Code Structure and Key Components
 - **Planning Chain**: Starts by creating a detailed plan for each section of the paper. Planning helps the model stay on track, reducing the chances of hallucinations or redundancy.
-- **RAG Chain (Retrieve-and-Generate)**: Uses a retrieval-augmented generation model to expand on each section. This ensures the script stays true to the source content while generating meaningful dialogue.
+- **Discussion Chain**: Uses a retrieval-augmented generation model to expand on each section. This ensures the script stays true to the source content while generating meaningful dialogue.
 - **Enhancement Chain**: Finalizes the script by removing redundancies, refining transitions, and ensuring a smooth flow.
 - **Text-to-Speech**: The generated script is then converted into audio using the OpenAI API, producing realistic voices for each persona.
 ![image](https://github.com/user-attachments/assets/65a6c67c-daee-4c2c-bcb7-18ee88ce6e5b)
