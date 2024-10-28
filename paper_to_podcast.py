@@ -129,7 +129,7 @@ def parse_pdf(pdf_path: str, output_path: str) -> str:
     final_text_to_section_after_conclusion = "\n".join(extracted_text)
 
     # Save to .txt file
-    with open(output_path, "w") as file:
+    with open(output_path, "w", encoding="utf-8") as file:
         file.write(final_text_to_section_after_conclusion)
 
     return output_path
@@ -235,7 +235,7 @@ def generate_script(pdf_path: str) -> str:
     # step 1: parse the pdf file
     txt_file = f"text_paper_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
     txt_file = parse_pdf(pdf_path, txt_file)
-    with open(txt_file, "r") as file:
+    with open(txt_file, "r", encoding="utf-8") as file:
         paper = file.read()
     plan = plan_script_chain.invoke({"paper": paper})
     print("plan generated")
