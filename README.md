@@ -49,7 +49,7 @@ The app is cost-effective, utilizing OpenAI's API. For example, generating a 9-m
 You can find examples of podcasts generated using this pipeline in the `./sample_podcasts` directory.
 
 ## Roadmap
-- [ ] **Optimization**: Currently, the process takes about 3 minutes for a 16-page paper. Further optimization is planned to reduce runtime.
+- [ ] **Optimization**: Currently, the process takes times. Further optimization is planned to reduce runtime.
 - [ ] **Local LLMs and TTS**: Exploring alternatives to OpenAI’s API for a completely free, local implementation using **Ollama** and open-source TTS models.
 
 ## Contributing
