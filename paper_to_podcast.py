@@ -1,30 +1,38 @@
 import argparse
-import os
-import re
 import datetime
 import glob
-from openai import OpenAI
-from PyPDF2 import PdfReader
-from pydub import AudioSegment
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import AIMessage
+import os
+import re
+from operator import itemgetter
+
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableParallel
-from operator import itemgetter
-from concurrent.futures import ThreadPoolExecutor
-from dotenv import load_dotenv
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# llms
-llm = ChatOpenAI(model="gpt-4o-mini")
-# prompts 
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from openai import OpenAI
+from pydub import AudioSegment
+from PyPDF2 import PdfReader
 
+# Load environment variables from a .env file
+load_dotenv()
+
+# Retrieve the OpenAI API key from the environment variables
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Check if the keys were retrieved successfully
+if OPENAI_API_KEY:
+    print(f"API Key: {OPENAI_API_KEY}")
+else:
+    print("API Key not found")
+
+# Initialize the ChatOpenAI model
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+# Templates
 plan_prompt = ChatPromptTemplate.from_template("""You are a very clever planner of podcast scripts. You will be given the text of a research paper, and your task will be to generate a plan for a podcast involving 3 persons discussing about the content of the paper in a very engaging, interactive and enthusiastic way. The plan will be structured using titles and bullet points only. The plan for the podcast should follow the structure of the paper. The podcast involves the following persons:
 - The host: he will present the paper and its details in a very engaging way. very professional, friendly, warm and enthusiastic.
 - The learner: he will ask clever and significative questions about the paper and its content. he is curious and funny.
@@ -113,7 +121,9 @@ def parse_pdf(pdf_path: str, output_path: str) -> str:
             if "Conclusion" in text:
                 conclusion_start = text.index("Conclusion")
                 extracted_text.append(text[conclusion_start:])
-                collecting = False  # Stop collecting after the section following Conclusion
+                collecting = (
+                    False  # Stop collecting after the section following Conclusion
+                )
 
     # Join all collected text
     final_text_to_section_after_conclusion = "\n".join(extracted_text)
@@ -123,6 +133,7 @@ def parse_pdf(pdf_path: str, output_path: str) -> str:
         file.write(final_text_to_section_after_conclusion)
 
     return output_path
+
 
 def get_head(pdf_path: str) -> str:
     # Load the PDF file
@@ -138,7 +149,9 @@ def get_head(pdf_path: str) -> str:
             # Stop collecting once "Introduction" is found
             if "Introduction" in text:
                 introduction_index = text.index("Introduction")
-                extracted_text.append(text[:introduction_index])  # Only collect content before "Introduction"
+                extracted_text.append(
+                    text[:introduction_index]
+                )  # Only collect content before "Introduction"
                 break
             else:
                 extracted_text.append(text)
@@ -146,18 +159,19 @@ def get_head(pdf_path: str) -> str:
     # Join the collected text and return as a single string
     return "\n".join(extracted_text)
 
+
 def parse_script_plan(ai_message: AIMessage) -> list:
     # Initialize the sections list
     sections = []
     current_section = []
-    
+
     # Split the text by line and skip the first line as the title
     lines = ai_message.content.strip().splitlines()
     lines = lines[1:]  # Skip the first line (title)
 
     # Regex patterns for any level of headers and bullet points
     header_pattern = re.compile(r"^#+\s")  # Match headers with any number of #
-    bullet_pattern = re.compile(r"^- ")     # Match lines starting with a bullet point "- "
+    bullet_pattern = re.compile(r"^- ")  # Match lines starting with a bullet point "- "
 
     # Parse each line, starting with the first header after the title
     for line in lines:
@@ -175,10 +189,11 @@ def parse_script_plan(ai_message: AIMessage) -> list:
     # Append the last section if exists
     if current_section:
         sections.append(" ".join(current_section))
-    
+
     return sections
 
-def initialize_discussion_chain(txt_file):
+
+def initialize_discussion_chain(txt_file: str):
     # Load, chunk and index the contents of the blog.
     loader = TextLoader(txt_file)
     docs = loader.load()
@@ -190,21 +205,21 @@ def initialize_discussion_chain(txt_file):
     # Retrieve and generate using the relevant snippets of the blog.
     retriever = vectorstore.as_retriever()
 
-
-
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
     discuss_rag_chain = (
-        {"additional_context": itemgetter("section_plan") | retriever | format_docs, 
-         "section_plan": itemgetter("section_plan"), 
-         "previous_dialogue": itemgetter("previous_dialogue")
-         }
+        {
+            "additional_context": itemgetter("section_plan") | retriever | format_docs,
+            "section_plan": itemgetter("section_plan"),
+            "previous_dialogue": itemgetter("previous_dialogue"),
+        }
         | discuss_prompt_template
         | llm
         | StrOutputParser()
     )
     return discuss_rag_chain
+
 
 # chains
 
@@ -214,7 +229,8 @@ initial_dialogue_chain = initial_dialogue_prompt | llm | StrOutputParser()
 
 enhance_chain = enhance_prompt | llm | StrOutputParser()
 
-def generate_script(pdf_path): 
+
+def generate_script(pdf_path: str) -> str:
     start_time = datetime.datetime.now()
     # step 1: parse the pdf file
     txt_file = f"text_paper_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
@@ -222,7 +238,7 @@ def generate_script(pdf_path):
     with open(txt_file, "r") as file:
         paper = file.read()
     plan = plan_script_chain.invoke({"paper": paper})
-    print("plan generated") 
+    print("plan generated")
 
     # step 3: generate the actual script for the podcast by looping over the sections of the plan
     script = ""
@@ -233,7 +249,9 @@ def generate_script(pdf_path):
     actual_script = initial_dialogue
     discuss_rag_chain = initialize_discussion_chain(txt_file)
     for section in plan:
-        section_script = discuss_rag_chain.invoke({"section_plan": section, "previous_dialogue": actual_script})
+        section_script = discuss_rag_chain.invoke(
+            {"section_plan": section, "previous_dialogue": actual_script}
+        )
         script += section_script
         actual_script = section_script
     enhanced_script = enhance_chain.invoke({"draft_script": script})
@@ -242,34 +260,39 @@ def generate_script(pdf_path):
     print("final script generated")
     return enhanced_script
 
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-def generate_host(text, output_dir):
+
+def generate_host(text: str, output_dir: str):
     now = datetime.datetime.now()
     response = client.audio.speech.create(
-    model="tts-1",
-    voice="alloy",
-    input=text,
-)
+        model="tts-1",
+        voice="alloy",
+        input=text,
+    )
     return response.stream_to_file(f"./{output_dir}/host_{now}.mp3")
 
-def generate_expert(text, output_dir):
+
+def generate_expert(text: str, output_dir: str):
     now = datetime.datetime.now()
     response = client.audio.speech.create(
-    model="tts-1",
-    voice="fable",
-    input=text,
-)
+        model="tts-1",
+        voice="fable",
+        input=text,
+    )
     return response.stream_to_file(f"./{output_dir}/expert_{now}.mp3")
+
 
 def generate_learner(text, output_dir):
     now = datetime.datetime.now()
     response = client.audio.speech.create(
-    model="tts-1",
-    voice="echo",
-    input=text,
-)
+        model="tts-1",
+        voice="echo",
+        input=text,
+    )
     return response.stream_to_file(f"./{output_dir}/learner_{now}.mp3")
+
 
 def merge_mp3_files(directory_path, output_file):
     # Find all .mp3 files in the specified directory
@@ -278,7 +301,10 @@ def merge_mp3_files(directory_path, output_file):
     # Sort files by datetime extracted from filename
     sorted_files = sorted(
         mp3_files,
-        key=lambda x: datetime.datetime.strptime(re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)', x).group(0), "%Y-%m-%d %H:%M:%S.%f")
+        key=lambda x: datetime.datetime.strptime(
+            re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)", x).group(0),
+            "%Y-%m-%d %H:%M:%S.%f",
+        ),
     )
 
     # Initialize an empty AudioSegment for merging
@@ -298,13 +324,15 @@ def generate_podcast(script):
     # create a new directory to store the audio files
     output_dir = f"podcast_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
     os.mkdir(output_dir)
-        # Regex to capture "Speaker: Text"
-    lines = re.findall(r"(Host|Learner|Expert):\s*(.*?)(?=(Host|Learner|Expert|$))", script, re.DOTALL)
+    # Regex to capture "Speaker: Text"
+    lines = re.findall(
+        r"(Host|Learner|Expert):\s*(.*?)(?=(Host|Learner|Expert|$))", script, re.DOTALL
+    )
 
     for speaker, text, _ in lines:
         # Strip any extra spaces or newlines
         text = text.strip()
-        
+
         # Direct the text to the appropriate function
         if speaker == "Host":
             generate_host(text, output_dir)
@@ -312,24 +340,30 @@ def generate_podcast(script):
             generate_learner(text, output_dir)
         elif speaker == "Expert":
             generate_expert(text, output_dir)
-    
+
     # Merge the audio files into a single podcast
     merge_mp3_files(output_dir, f"podcast_{datetime.datetime.now()}.mp3")
-        
+
+
 def main(pdf_path):
     # Step 1: Generate the podcast script from the PDF
     print("Generating podcast script...")
     script = generate_script(pdf_path)
     print("Podcast script generation complete!")
-    
+
     print("Generating podcast audio files...")
     # Step 2: Generate the podcast audio files and merge them
     generate_podcast(script)
     print("Podcast generation complete!")
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a podcast from a research paper.")
-    parser.add_argument("pdf_path", type=str, help="Path to the research paper PDF file.")
-    
+    parser = argparse.ArgumentParser(
+        description="Generate a podcast from a research paper."
+    )
+    parser.add_argument(
+        "pdf_path", type=str, help="Path to the research paper PDF file."
+    )
+
     args = parser.parse_args()
     main(args.pdf_path)
