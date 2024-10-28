@@ -11,6 +11,7 @@ from ..templates import discuss_prompt_template
 from datetime import datetime
 import re
 
+
 def initialize_discussion_chain(txt_file: str, llm: ChatOpenAI) -> ChatPromptTemplate:
     # Load, chunk and index the contents of the blog.
     loader = TextLoader(txt_file)
@@ -69,7 +70,6 @@ def parse_pdf(pdf_path: str, output_path: str) -> str:
     return output_path
 
 
-
 def get_head(pdf_path: str) -> str:
     # Load the PDF file
     pdf_reader = PdfReader(pdf_path)
@@ -95,7 +95,6 @@ def get_head(pdf_path: str) -> str:
     return "\n".join(extracted_text)
 
 
-
 def generate_script(pdf_path: str, chains: dict) -> str:
     start_time = datetime.datetime.now()
     # step 1: parse the pdf file
@@ -103,13 +102,15 @@ def generate_script(pdf_path: str, chains: dict) -> str:
     txt_file = parse_pdf(pdf_path, txt_file)
     with open(txt_file, "r", encoding="utf-8") as file:
         paper = file.read()
-    plan = chains['plan_script_chain'].invoke({"paper": paper})
+    plan = chains["plan_script_chain"].invoke({"paper": paper})
     print("plan generated")
 
     # step 3: generate the actual script for the podcast by looping over the sections of the plan
     script = ""
     # generate the initial dialogue
-    initial_dialogue = chains['initial_dialogue_chain'].invoke({"paper_head": get_head(pdf_path)})
+    initial_dialogue = chains["initial_dialogue_chain"].invoke(
+        {"paper_head": get_head(pdf_path)}
+    )
 
     script += initial_dialogue
     actual_script = initial_dialogue
@@ -120,11 +121,12 @@ def generate_script(pdf_path: str, chains: dict) -> str:
         )
         script += section_script
         actual_script = section_script
-    enhanced_script = chains['enhance_chain'].invoke({"draft_script": script})
+    enhanced_script = chains["enhance_chain"].invoke({"draft_script": script})
     end_time = datetime.datetime.now()
     print(f"Time taken: {end_time - start_time}")
     print("final script generated")
     return enhanced_script
+
 
 def parse_script_plan(ai_message: AIMessage) -> list:
     # Initialize the sections list

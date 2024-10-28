@@ -30,8 +30,9 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 chains = {
     "plan_script_chain": plan_prompt | llm | parse_script_plan,
     "initial_dialogue_chain": initial_dialogue_prompt | llm | StrOutputParser(),
-    "enhance_chain": enhance_prompt | llm | StrOutputParser()
+    "enhance_chain": enhance_prompt | llm | StrOutputParser(),
 }
+
 
 def main(pdf_path):
     # Step 1: Generate the podcast script from the PDF
