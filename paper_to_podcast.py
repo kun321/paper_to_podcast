@@ -16,7 +16,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Check if the keys were retrieved successfully
 if OPENAI_API_KEY:
-    print(f"API Key: {OPENAI_API_KEY}")
+    print(f"API Key retrieved successfully")
 else:
     print("API Key not found")
 
@@ -37,7 +37,7 @@ chains = {
 def main(pdf_path):
     # Step 1: Generate the podcast script from the PDF
     print("Generating podcast script...")
-    script = generate_script(pdf_path, chains)
+    script = generate_script(pdf_path, chains,llm)
     print("Podcast script generation complete!")
 
     print("Generating podcast audio files...")

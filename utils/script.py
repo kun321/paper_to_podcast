@@ -5,14 +5,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.retrievers import itemgetter
+from operator import itemgetter
 from PyPDF2 import PdfReader
-from ..templates import discuss_prompt_template
+from templates import discuss_prompt_template
 from datetime import datetime
 import re
 
 
-def initialize_discussion_chain(txt_file: str, llm: ChatOpenAI) -> ChatPromptTemplate:
+def initialize_discussion_chain(txt_file, llm):
     # Load, chunk and index the contents of the blog.
     loader = TextLoader(txt_file)
     docs = loader.load()
@@ -95,10 +95,10 @@ def get_head(pdf_path: str) -> str:
     return "\n".join(extracted_text)
 
 
-def generate_script(pdf_path: str, chains: dict) -> str:
-    start_time = datetime.datetime.now()
+def generate_script(pdf_path: str, chains: dict, llm) -> str:
+    start_time = datetime.now()
     # step 1: parse the pdf file
-    txt_file = f"text_paper_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
+    txt_file = f"text_paper_{datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
     txt_file = parse_pdf(pdf_path, txt_file)
     with open(txt_file, "r", encoding="utf-8") as file:
         paper = file.read()
@@ -114,7 +114,7 @@ def generate_script(pdf_path: str, chains: dict) -> str:
 
     script += initial_dialogue
     actual_script = initial_dialogue
-    discuss_rag_chain = initialize_discussion_chain(txt_file)
+    discuss_rag_chain = initialize_discussion_chain(txt_file, llm)
     for section in plan:
         section_script = discuss_rag_chain.invoke(
             {"section_plan": section, "previous_dialogue": actual_script}
@@ -122,7 +122,7 @@ def generate_script(pdf_path: str, chains: dict) -> str:
         script += section_script
         actual_script = section_script
     enhanced_script = chains["enhance_chain"].invoke({"draft_script": script})
-    end_time = datetime.datetime.now()
+    end_time = datetime.now()
     print(f"Time taken: {end_time - start_time}")
     print("final script generated")
     return enhanced_script

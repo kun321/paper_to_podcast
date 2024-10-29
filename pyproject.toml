@@ -1,28 +1,26 @@
-[project]
+[tool.poetry]
 name = "paper_to_podcast"
 version = "0.1.0"
 description = "An innovative podcast generator that transforms research papers into engaging discussions among three simulated speakers. Perfect for podcast enthusiasts, this project provides an interactive way to learn about research papers, ideal for listening on the go."
-authors = [{ name = "AIT SAID Azzedine Idir", email = "ja_aitsaid@esi.dz" }]
+authors = ["AIT SAID Azzedine Idir <ja_aitsaid@esi.dz>"]
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 
-dependencies = [
-    "langchain_chroma==0.1.4",
-    "langchain_community==0.3.3",
-    "langchain_core==0.3.13",
-    "langchain_openai==0.2.3",
-    "langchain_text_splitters==0.3.0",
-    "openai==1.52.2",
-    "pydub==0.25.1",
-    "PyPDF2==3.0.1",
-    "python-dotenv==1.0.1"
-]
+[tool.poetry.dependencies]
+python = "^3.10" 
+langchain_chroma = "0.1.4"
+langchain_community = "0.3.3"
+langchain_core = "0.3.13"
+langchain_openai = "0.2.3"
+langchain_text_splitters = "0.3.0"
+openai = "1.52.2"
+pydub = "0.25.1"
+PyPDF2 = "3.0.1"
+python-dotenv = "1.0.1"
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
