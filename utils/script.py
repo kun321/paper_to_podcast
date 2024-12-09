@@ -14,7 +14,7 @@ import re
 
 def initialize_discussion_chain(txt_file, llm):
     # Load, chunk and index the contents of the blog.
-    loader = TextLoader(txt_file)
+    loader = TextLoader(txt_file, encoding='UTF-8')
     docs = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
