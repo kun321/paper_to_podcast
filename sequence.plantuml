@@ -1,0 +1,16 @@
+@startuml
+actor User
+participant System
+participant GenerateScript
+participant GeneratePodcast
+
+User -> System : call main(pdf_path)
+System -> System : print "Generating podcast script..."
+System -> GenerateScript : generate_script(pdf_path, chains, llm)
+GenerateScript -> System : return enhanced_script
+System -> System : print "Podcast script generation complete!"
+System -> System : print "Generating podcast audio files..."
+System -> GeneratePodcast : generate_podcast(enhanced_script, client)
+GeneratePodcast -> System : complete
+System -> System : print "Podcast generation complete!"
+@enduml
